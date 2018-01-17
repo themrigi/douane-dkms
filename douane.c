@@ -1194,7 +1194,12 @@ static int __init initialize_module(void)
   INIT_LIST_HEAD(&process_socket_inodes.list);
 
   // Hook to Netfilter
-  nf_register_hook(&nfho_outgoing);
+  //nf_register_hook(&nfho_outgoing);
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+	nf_register_net_hook(&init_net, &nfho_outgoing);
+  #else
+	nf_register_hook(&nfho_outgoing);
+  #endif
 
   // Open a Netfilter socket to communicate with the user space
   if (initialize_activities_socket() < 0)
@@ -1222,7 +1227,12 @@ static void __exit exit_module(void)
     activities_socket = NULL;
   }
 
-  nf_unregister_hook(&nfho_outgoing);
+  //nf_unregister_hook(&nfho_outgoing);
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+	nf_unregister_net_hook(&init_net, &nfho_outgoing);
+  #else
+	nf_unregister_net_hook(&nfho_outgoing);
+  #endif
 
 #ifdef DEBUG
   printk(KERN_INFO "douane:%d:%s: Kernel module removed!\n", __LINE__, __FUNCTION__);
